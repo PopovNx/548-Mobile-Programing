@@ -1,59 +1,44 @@
 package com.popov.calculator
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.slider.Slider
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var amountEdit: EditText
+    private lateinit var percentSlider: Slider
+    private lateinit var resultText: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { TaxCalculator() }
+        setContentView(R.layout.activity_main)
+
+        amountEdit = findViewById(R.id.amountEdit)
+        percentSlider = findViewById(R.id.percentSlider)
+        resultText = findViewById(R.id.resultText)
+
+        amountEdit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) = updateResult()
+        })
+        percentSlider.addOnChangeListener { _, _, _ -> updateResult() }
+
+        updateResult()
     }
-}
 
-@Composable
-fun TaxCalculator() {
-    var amount by remember { mutableStateOf("") }
-    var percent by remember { mutableFloatStateOf(0f) }
-    val value = amount.toDoubleOrNull()
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text("Bill amount") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        )
-        Slider(
-            value = percent,
-            onValueChange = { percent = it },
-            valueRange = 0f..100f,
-        )
-        Text(
-            text = value?.let {
-                val tax = it * percent / 100
-                "Bill amount: ${"%.2f".format(it)}$, percent: ${"%.0f".format(percent)}%\nTax amount: ${"%.2f".format(tax)}$"
-            } ?: "",
-        )
+    private fun updateResult() {
+        val value = amountEdit.text.toString().toDoubleOrNull()
+        val percent = percentSlider.value
+        resultText.text = value?.let {
+            val tax = it * percent / 100
+            "Bill amount: ${"%.2f".format(it)}$, percent: ${"%.0f".format(percent)}%\n" +
+                "Tax amount: ${"%.2f".format(tax)}$"
+        } ?: ""
     }
 }
